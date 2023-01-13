@@ -1,10 +1,10 @@
-### What's inside
+# Armored-turret-train
 
-* Armored locomotive (Crush tough biters)
-* Minigun platform MK1 (Shoot at close range)
-* Rocket platform MK1 (Shoot at long range, can accept any rockets and nuke)
-* Cannon wagon MK1 (Shoot at medium range, can accept any cannon ammo)
-* Flamethrower wagon MK1 (Shoot at long range, fire damage)
-* Radar platform (Reveal train on map)
 
-### Download link: https://mods.factorio.com/mod/Armored-train
+A fork of [Pandamiami80s](https://mods.factorio.com/user/pandamiami80s)'s [Factorio](https://factorio.com/) Mod [Armored Train (Turret Wagons)](https://mods.factorio.com/mod/Armored-train)
+
+![Thumbnail image for the mod showing the various train types it adds to the game](thumbnail.png)
+
+## Acknowledgments
+
+* [Pandamiami80s](https://mods.factorio.com/user/pandamiami80s) - Credits to the original author of this fantastic mod
