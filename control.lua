@@ -184,13 +184,16 @@ function onTickMain(event)  -- Move each turret to follow its wagon
 			--Is this entity valid/nil?
 			if createdPlatform.proxy ~= nil and createdPlatform.proxy.valid then	--or if isEntityValid(createdPlatform.proxy) then
 			
-			
-			
-			
+				--Since the game is imaginary 3D, when you rotate the object, 
+				--you need to move the tower a little so that it is always allegedly in the same place
+				local r = 0.6
+				local xAdd = r * math.cos(2 * (createdPlatform.entity.orientation * 2 * math.pi + math.pi/4))
+				local yAdd = r * math.cos(createdPlatform.entity.orientation * 2 * math.pi)
+				
 				--teleport i turret to i platform (good)
 				createdPlatform.proxy.teleport({
-						x = createdPlatform.entity.position.x,			
-						y = createdPlatform.entity.position.y -- 0.25
+						x = createdPlatform.entity.position.x + xAdd,			
+						y = createdPlatform.entity.position.y + math.abs(yAdd)
 					})
 					
 				
