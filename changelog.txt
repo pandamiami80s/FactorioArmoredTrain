@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.4.7
+Info:
+	- Cannon turret suicide fixed
+	- Fixed display of the turret above the wagon
+	- Fixed loading shells into the turret
+	- Significantly reduced code duplication
+	
+---------------------------------------------------------------------------------------------------
 Version: 0.4.6
 Info:
 	- Thumbnail fix
