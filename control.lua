@@ -16,46 +16,9 @@ isModEntity = function(modEntity)
 	return false
 end
 
-
-
-
---Create turret as proxy to platform (data stored to table)
-function createProxyTurretMinigun(position, surface, force)
+function createProxy(position, surface, force, name)
 	local proxy = surface.create_entity{
-	name = "minigun-turret-mk1", 
-	position = position, 
-	force = force}
-	return proxy
-end
-function createProxyTurretRocket(position, surface, force)
-	local proxy = surface.create_entity{
-	name = "rocket-turret-mk1", 
-	position = position, 
-	force = force}
-	return proxy
-end
-
-
-function createProxyTurretCannon(position, surface, force)
-	local proxy = surface.create_entity{
-	name = "cannon-turret-mk1", 
-	position = position, 
-	force = force}
-	return proxy
-end
-
-
-function createProxyTurretFlamethrower(position, surface, force)
-	local proxy = surface.create_entity{
-	name = "flamethrower-turret-mk1", 
-	position = position, 
-	force = force}
-	return proxy
-end
-
-function createProxyRadar(position, surface, force)
-	local proxy = surface.create_entity{
-	name = "radar-mk1", 
+	name = name, 
 	position = position, 
 	force = force}
 	return proxy
@@ -118,42 +81,46 @@ function entityBuilt(event)
 		if createdEntity.name == "minigun-platform-mk1" then
 		
 			--Create and defince a proxy At created entity position and surface and force
-			createdPlatform.proxy = createProxyTurretMinigun(
+			createdPlatform.proxy = createProxy(
 				createdEntity.position, 
-				createdEntity.surface, createdEntity.force)
+				createdEntity.surface, createdEntity.force,
+				"minigun-turret-mk1")
 		end 
 		if createdEntity.name == "cannon-wagon-mk1" then		
 			
-			createdPlatform.proxy = createProxyTurretCannon(
+			createdPlatform.proxy = createProxy(
 				createdEntity.position, 
-				createdEntity.surface, createdEntity.force)
+				createdEntity.surface, createdEntity.force,
+				"cannon-turret-mk1")
 			
 		end 
 		
 		if createdEntity.name == "rocket-platform-mk1" then		
 			
-			createdPlatform.proxy = createProxyTurretRocket(
+			createdPlatform.proxy = createProxy(
 				createdEntity.position, 
-				createdEntity.surface, createdEntity.force)
+				createdEntity.surface, createdEntity.force,
+				"rocket-turret-mk1")
 			
 		end 
 		
 		if createdEntity.name == "flamethrower-wagon-mk1" then		
 			
-			createdPlatform.proxy = createProxyTurretFlamethrower(
+			createdPlatform.proxy = createProxy(
 				createdEntity.position, 
-				createdEntity.surface, createdEntity.force)
+				createdEntity.surface, createdEntity.force,
+				"flamethrower-turret-mk1")
 			
 		end 
 			
 		if createdEntity.name == "radar-platform-mk1" then		
 	
-			createdPlatform.proxy = createProxyRadar(
+			createdPlatform.proxy = createProxy(
 				createdEntity.position, 
-				createdEntity.surface, createdEntity.force)
+				createdEntity.surface, createdEntity.force,
+				"radar-mk1")
 			
-		end 
-			
+		end	
 		
 		--Create table "turretPlatformList" and store data (if null create else just pass data)
 		global.turretPlatformList = initTurretPlatformList(global.turretPlatformList)
@@ -172,7 +139,32 @@ script.on_event(defines.events.script_raised_built, entityBuilt)
 
 
 
-
+local function format_any_value(obj, buffer)
+    local _type = type(obj)
+    if _type == "table" then
+        buffer[#buffer + 1] = '{"'
+        for key, value in next, obj, nil do
+            buffer[#buffer + 1] = tostring(key) .. '":'
+            format_any_value(value, buffer)
+            buffer[#buffer + 1] = ',"'
+        end
+        buffer[#buffer] = '}' -- note the overwrite
+    elseif _type == "string" then
+        buffer[#buffer + 1] = '"' .. obj .. '"'
+    elseif _type == "boolean" or _type == "number" then
+        buffer[#buffer + 1] = tostring(obj)
+    else
+        buffer[#buffer + 1] = '"???' .. _type .. '???"'
+    end
+end
+--Function for debugging
+local function format_as_json(obj)
+    if obj == nil then return "null" else
+        local buffer = {}
+        format_any_value(obj, buffer)
+        return table.concat(buffer)
+    end
+end
 
 
 --ON TICK \/--
@@ -184,13 +176,16 @@ function onTickMain(event)  -- Move each turret to follow its wagon
 			--Is this entity valid/nil?
 			if createdPlatform.proxy ~= nil and createdPlatform.proxy.valid then	--or if isEntityValid(createdPlatform.proxy) then
 			
-			
-			
-			
+				--Since the game is imaginary 3D, when you rotate the object, 
+				--you need to move the tower a little so that it is always allegedly in the same place
+				local r = 0.6
+				local xAdd = r * math.cos(2 * (createdPlatform.entity.orientation * 2 * math.pi + math.pi/4))
+				local yAdd = r * math.cos(createdPlatform.entity.orientation * 2 * math.pi)
+				
 				--teleport i turret to i platform (good)
 				createdPlatform.proxy.teleport({
-						x = createdPlatform.entity.position.x,			
-						y = createdPlatform.entity.position.y -- 0.25
+						x = createdPlatform.entity.position.x + xAdd,			
+						y = createdPlatform.entity.position.y + math.abs(yAdd)
 					})
 					
 				
@@ -202,7 +197,45 @@ function onTickMain(event)  -- Move each turret to follow its wagon
 				
 				
 				--each ~ 3 sec do
-				if event.tick %20 == 3 then
+				if event.tick %100 == 3 then
+					--Now we have all the wagons have inventory
+					--And here we transfer shells from the inventory of the wagon to the inventory of the guns
+					--This is also a bug. Just manipulators fill the wagons
+					-- And the turrets - forget :(
+					
+					--We support the number of ammo no higher than 10 pieces
+					local summ = 0
+					for key, value in next, createdPlatform.proxy.get_inventory(1).get_contents(), nil do
+						summ = summ + value
+					end
+					--game.print('summ: ' .. format_as_json(summ) .. ' ')
+					
+					if summ < 10 then
+						local inv = createdPlatform.entity.get_inventory(1)		
+						--game.print('filter: ' .. format_as_json(inv) .. ' ')
+						
+						--We pass through the entire inventory of the car
+						--We carry no more than 10 items with each available bag
+						for i = 1, #inv do
+							local itemInWagon = inv[i]
+							if itemInWagon.count > 0 then
+							--If we can insert - we insert. Don't forget to subtract how much you put in!
+								if createdPlatform.proxy.get_inventory(1).can_insert(itemInWagon) then
+									if itemInWagon.count > 10 then 
+										local oc = itemInWagon.count;
+										itemInWagon.count = 10;
+										local insert = createdPlatform.proxy.get_inventory(1).insert(itemInWagon)
+										itemInWagon.count = oc - insert;
+									else
+										local insert = createdPlatform.proxy.get_inventory(1).insert(itemInWagon)
+										itemInWagon.count = itemInWagon.count - insert;
+									end
+									--game.print('filter: ' .. format_as_json(itemInWagon.count) .. ' ')
+									break
+								end
+							end
+						end
+					end
 				
 					--Taken damge to TURRET is applyed to WAGON
 					local damageTaken = platformMaxHealth - createdPlatform.proxy.health
@@ -249,7 +282,7 @@ function entityRemoved(event)
 			return val.entity == event.entity
 			
 			
-			end
+		end
 		
 		
 		
@@ -260,9 +293,6 @@ function entityRemoved(event)
 		if wagon ~= nil then --or if isWagonValid(wagon) then		--can produce bug wher mining and wagon destroeyd
 		
 			if wagon.proxy ~= nil and wagon.proxy.valid then		-- or if isEntityValid(wagon.proxy) then
-				
-					
-					
 					wagon.proxy.destroy()
 					wagon.proxy = nil
 					

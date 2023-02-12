@@ -36,7 +36,7 @@ l_radar_mk1.energy_source =
 	fuel_category = "chemical",
 	effectivity = 1,
 	emissions_per_minute = 1,						-- 4
-	fuel_inventory_size = 3,
+	fuel_inventory_size = 1,
 	smoke =
 	{
 		{
@@ -56,7 +56,7 @@ local blank_layers =
 	layers = 
 	{
 		{
-			filename = 	"__Armored-train__/assets/minigun-turret-mk1/fakeTransparent.png",
+			filename = 	"__Armored-train__/assets/radar-mk1/fakeTransparent.png",
 			direction_count = 1,
 			height = 16,
 			width = 16
